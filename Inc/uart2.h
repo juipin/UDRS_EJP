@@ -9,6 +9,8 @@
 #ifndef UART2_H_
 #define UART2_H_
 
+#include "stm32f3xx_hal.h"
+
 extern RTC_HandleTypeDef hrtc;
 extern UART_HandleTypeDef huart2;
 extern RTC_TimeTypeDef sTime;

@@ -48,6 +48,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f3xx_hal.h"
+//#include "uart2.h"
+//#include "AppColourDetect.h"
 
 /* USER CODE BEGIN Includes */
 

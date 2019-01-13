@@ -1,12 +1,14 @@
 /*
- *	File name:		APP_ColourDetect.h
+ *	File name:		AppColourDetect.h
  *	Author:				Er Jui Pin
  *  Date created: 7 Jan 2019
  *
  */
 
-#ifndef COLOURSENSOR_H_
-#define COLOURSENSOR_H_
+#ifndef APPCOLOURDETECT_H_
+#define APPCOLOURDETECT_H_
+
+#include "stm32f3xx_hal.h"
 
 extern I2C_HandleTypeDef hi2c1;
 
@@ -93,4 +95,4 @@ void SetBlueGain(void);
 void SetClearGain(void);
 void AutoCalibrateSensorGains(void);
 
-#endif /* COLOURSENSOR_H_ */
+#endif /* APPCOLOURDETECT_H_ */

@@ -53,8 +53,7 @@
 /* USER CODE BEGIN Includes */
 #include "stdint.h"												// uinit definition
 #include "string.h"
-//#include "uart2.h"
-//#include "AppColourDetect.h"
+
 
 /* USER CODE END Includes */
 

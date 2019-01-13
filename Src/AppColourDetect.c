@@ -1,5 +1,5 @@
 /*
- *	File name:		APP_ColourDetect.c
+ *	File name:		AppColourDetect.c
  *	Author:				Er Jui Pin
  *  Date created: 7 Jan 2019
  *
