@@ -13,8 +13,8 @@
  */
 
 #include "main.h"
-#include "stm32f3xx_hal.h"
 #include "AppColourDetect.h"
+//#include "stm32f3xx_hal.h"
 #include "uart2.h"
 
 /* Struct containing Device Selection in the menu */
@@ -25,10 +25,11 @@ UDRS_OperationTypedef	API_CDT_operation[] =
 	{SetRedGain, "3: Set Red Channel Gain", 0},
 	{SetGreenGain, "4: Set Green Channel Gain", 0},
 	{SetBlueGain, "5: Set Blue Channel Gain", 0},
-	{SetClearGain, "6: Set Cleard Channel Gain", 0},
-	{AutoCalibrateSensorGains, "7: Auto Calibrate Sensor Gains", 0},
-	{SelectTopMenuOnUart, "8: Return To	Top Menu", 0},
-	{SetExit, "9: Exit", 0},
+	{SetClearGain, "6: Set Clear Channel Gain", 0},
+	{SetDefaultGain, "7: Set Default Channel Gains", 0},
+	{AutoCalibrateSensorGains, "8: Auto Calibrate Sensor Gains", 0},
+	{SelectTopMenuOnUart, "9: Return To	Top Menu", 0},
+	{SetExit, "10: Exit", 0},
 	
 };
 
@@ -331,6 +332,38 @@ void CollectColourSensorData(void)
   if(HAL_I2C_Mem_Write(&hi2c1, COLOUR_SENSOR<<1, CTRL, 1, bufferColourSensor, 1, 100) !=HAL_OK)	//Send to start reading
 	{
     _Error_Handler(__FILE__, __LINE__);
+		/* May be caused by system hang at STM side as there is no I2C signals. Reset and re-enable the sensor */
+		//MX_I2C1_Init();
+		{
+			hi2c1.Instance = I2C1;
+			hi2c1.Init.Timing = 0x2000090E;
+			hi2c1.Init.OwnAddress1 = 0;
+			hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+			hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+			hi2c1.Init.OwnAddress2 = 0;
+			hi2c1.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
+			hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+			hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+			if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+			{
+				_Error_Handler(__FILE__, __LINE__);
+			}
+
+				/**Configure Analogue filter 
+				*/
+			if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
+			{
+				_Error_Handler(__FILE__, __LINE__);
+			}
+
+				/**Configure Digital filter 
+				*/
+			if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
+			{
+				_Error_Handler(__FILE__, __LINE__);
+			}
+		}
+		
   }
 
   bufferColourSensor[0]= 0x01;
@@ -340,6 +373,11 @@ void CollectColourSensorData(void)
     if(HAL_I2C_Mem_Read(&hi2c1, COLOUR_SENSOR<<1, CTRL, 1, bufferColourSensor, 1, 100) !=HAL_OK)
 		{
 			_Error_Handler(__FILE__, __LINE__);
+		}
+		if(1==secondFlag) { /* if it is hung here, use this to get out of the while loop */
+			/* wait too long, hanging here at reading */
+			/* NOTE: this routine does not catch the hang exception! */
+			API_USR_TransmitMessage("Waiting too long for Colour Sensor to Read Signals!\r\n");
 		}
   }
 
@@ -472,9 +510,10 @@ void ColourSensorMenu(void)
 	API_USR_TransmitMessage("* 4- Set Green Channel Gain                                   *\r\n");
 	API_USR_TransmitMessage("* 5- Set Blue Channel Gain                                    *\r\n");
 	API_USR_TransmitMessage("* 6- Set Cleard Channel Gain                                  *\r\n");
-	API_USR_TransmitMessage("* 7- Auto Calibrate Sensor Gains                              *\r\n");
-	API_USR_TransmitMessage("* 8- Return To Top Menu                                       *\r\n");
-	API_USR_TransmitMessage("* 9- Exit                                                     *\r\n");
+	API_USR_TransmitMessage("* 7- Set Default Channel Gains                                *\r\n");
+	API_USR_TransmitMessage("* 8- Auto Calibrate Sensor Gains                              *\r\n");
+	API_USR_TransmitMessage("* 9- Return To Top Menu                                       *\r\n");
+	API_USR_TransmitMessage("* 10- Exit                                                    *\r\n");
 	API_USR_TransmitMessage("*                                                             *\r\n");
 	snprintf((char *)buffer,sizeof(buffer),"*      C:%02d    RG:%04d    GG:%04d    BG:%04d    CG:%04d       *\r\n",CapacitorValue, RedGain, GreenGain,BlueGain, ClearGain);
 	API_USR_TransmitMessage((char *)buffer);
@@ -508,11 +547,12 @@ void StartColourDetectionTest(void)
 		}
 		else
 		{
-			_Error_Handler(__FILE__, __LINE__);
+//			_Error_Handler(__FILE__, __LINE__);
 		}
 
 		if(1 == secondFlag)
 		{
+			secondFlag=0;    /* Move this statement up and check secondFlag==0 in Collect ColourSensorData() to see if it hangs there */
 			CollectColourSensorData();
 
 //			snprintf((char *)buffer, sizeof(buffer),"%02d/%02d, %02d:%02d, Red:%04d, Green: %04d, Blue:%04d, Clear:%04d\r\n",sDate.Date, sDate.Month, sTime.Hours, sTime.Minutes, Red, Green, Blue, Clear);
@@ -522,7 +562,7 @@ void StartColourDetectionTest(void)
 			{
 				_Error_Handler(__FILE__, __LINE__);
 			}
-			secondFlag=0;
+			//secondFlag=0;
 		}
 	}
 }
@@ -534,7 +574,7 @@ void SetCapacitorAmount(void)
 
 	API_USR_TransmitMessage("\r\nPlease enter the new Capacitor value from 0 to 15.\r\n\r\n");
 
-	CapacitorValue= ReceiveUartCalculationValue();
+	CapacitorValue = ReceiveUartCalculationValue();
 
 	//if(CapacitorValue<0 || CapacitorValue>15)
 	if(CapacitorValue>15)
@@ -553,7 +593,6 @@ void SetRedGain(void)
 	API_USR_TransmitMessage("Please enter the Red gain:(0-4095)\r\n\r\n");
 	RedGain= ReceiveUartCalculationValue();
 
-
 	//if(RedGain<0 || RedGain>4095)
 	if(RedGain>4095)
 	{
@@ -561,25 +600,25 @@ void SetRedGain(void)
 		SetRedGain();
 	}
 
-    address= INT_RED_LO;                                                            //Select value range (Sensor gain)
-    bufferColourSensor[0]= RedGain & 0x00FF;
+	address = INT_RED_LO;                                                            //Select value range (Sensor gain)
+	bufferColourSensor[0] = RedGain & 0x00FF;
 
-    if(HAL_I2C_Mem_Write(&hi2c1, COLOUR_SENSOR<<1, address, 1, bufferColourSensor, 1, 100)==HAL_OK)
-    			API_USR_TransmitMessage("Red Gain of the Colour Sensor is set(LOW)!\r\n");
-		else
-		{
-			_Error_Handler(__FILE__, __LINE__);
-		}
+	if(HAL_I2C_Mem_Write(&hi2c1, COLOUR_SENSOR<<1, address, 1, bufferColourSensor, 1, 100)==HAL_OK)
+				API_USR_TransmitMessage("Red Gain of the Colour Sensor is set(LOW)!\r\n");
+	else
+	{
+		_Error_Handler(__FILE__, __LINE__);
+	}
 
-    address= INT_RED_HI;
-    bufferColourSensor[0]= (RedGain>>8)& 0x000F;
+	address= INT_RED_HI;
+	bufferColourSensor[0] = (RedGain>>8)& 0x000F;
 
-    if(HAL_I2C_Mem_Write(&hi2c1, COLOUR_SENSOR<<1, address, 1, bufferColourSensor, 1, 100)==HAL_OK)
-    			API_USR_TransmitMessage("Red Gain of the Colour Sensor is set(HIGH)!\r\n");
-		else
-		{
-			_Error_Handler(__FILE__, __LINE__);
-		}
+	if(HAL_I2C_Mem_Write(&hi2c1, COLOUR_SENSOR<<1, address, 1, bufferColourSensor, 1, 100)==HAL_OK)
+				API_USR_TransmitMessage("Red Gain of the Colour Sensor is set(HIGH)!\r\n");
+	else
+	{
+		_Error_Handler(__FILE__, __LINE__);
+	}
 
    SelectColourSensorMenuOnUart();
 
@@ -598,7 +637,7 @@ void SetGreenGain(void)
 	}
 
 	address= INT_GREEN_LO;                                                            //Select value range (Sensor gain)
-	bufferColourSensor[0]= GreenGain & 0x00FF;
+	bufferColourSensor[0] = GreenGain & 0x00FF;
 
 	if(HAL_I2C_Mem_Write(&hi2c1, COLOUR_SENSOR<<1, address, 1, bufferColourSensor, 1, 100)==HAL_OK)
 				API_USR_TransmitMessage("Green Gain of the Colour Sensor is set(LOW)!\r\n");
@@ -608,7 +647,7 @@ void SetGreenGain(void)
 	}
 
 	address= INT_GREEN_HI;
-	bufferColourSensor[0]= (GreenGain>>8)& 0x000F;
+	bufferColourSensor[0] = (GreenGain>>8)& 0x000F;
 
 	if(HAL_I2C_Mem_Write(&hi2c1, COLOUR_SENSOR<<1, address, 1, bufferColourSensor, 1, 100)==HAL_OK)
 				API_USR_TransmitMessage("Green Gain of the Colour Sensor is set(HIGH)!\r\n");
@@ -633,7 +672,7 @@ void SetBlueGain(void)
 	}
 
 	address= INT_BLUE_LO;                                                            //Select value range (Sensor gain)
-	bufferColourSensor[0]= BlueGain & 0x00FF;
+	bufferColourSensor[0] = BlueGain & 0x00FF;
 
 	if(HAL_I2C_Mem_Write(&hi2c1, COLOUR_SENSOR<<1, address, 1, bufferColourSensor, 1, 100)==HAL_OK)
 				API_USR_TransmitMessage("Blue Gain of the Colour Sensor is set(LOW)!\r\n");
@@ -643,7 +682,7 @@ void SetBlueGain(void)
 	}
 
 	address= INT_BLUE_HI;
-	bufferColourSensor[0]= (BlueGain>>8)& 0x000F;
+	bufferColourSensor[0] = (BlueGain>>8)& 0x000F;
 
 	if(HAL_I2C_Mem_Write(&hi2c1, COLOUR_SENSOR<<1, address, 1, bufferColourSensor, 1, 100)==HAL_OK)
 				API_USR_TransmitMessage("Blue Gain of the Colour Sensor is set(HIGH)!\r\n");
@@ -668,6 +707,104 @@ void SetClearGain(void)
 	}
 
 	address= INT_CLEAR_LO;                                                            //Select value range (Sensor gain)
+	bufferColourSensor[0] = ClearGain & 0x00FF;
+
+	if(HAL_I2C_Mem_Write(&hi2c1, COLOUR_SENSOR<<1, address, 1, bufferColourSensor, 1, 100)==HAL_OK)
+				API_USR_TransmitMessage("Clear Gain of the Colour Sensor is set(LOW)!\r\n");
+	else
+	{
+		_Error_Handler(__FILE__, __LINE__);
+	}
+
+	address= INT_CLEAR_HI;
+	bufferColourSensor[0] = (ClearGain>>8)& 0x000F;
+
+	if(HAL_I2C_Mem_Write(&hi2c1, COLOUR_SENSOR<<1, address, 1, bufferColourSensor, 1, 100)==HAL_OK)
+				API_USR_TransmitMessage("Clear Gain of the Colour Sensor is set(HIGH)!\r\n");
+	else
+	{
+		_Error_Handler(__FILE__, __LINE__);
+	}
+
+	SelectColourSensorMenuOnUart();
+}
+
+void SetDefaultGain(void)
+{
+	CapacitorValue = CAPACITOR;
+	RedGain = GAIN_RED;
+	GreenGain = GAIN_GREEN;
+	BlueGain = GAIN_BLUE;
+	ClearGain = GAIN_CLEAR;
+
+	//Set default Capacitor Amount
+	SelectCapacitorAmount(CapacitorValue);
+	
+	//Set default Red Channel Gain
+	address = INT_RED_LO;                                                            //Select value range (Sensor gain)
+	bufferColourSensor[0] = RedGain & 0x00FF;
+
+	if(HAL_I2C_Mem_Write(&hi2c1, COLOUR_SENSOR<<1, address, 1, bufferColourSensor, 1, 100)==HAL_OK)
+				API_USR_TransmitMessage("Red Gain of the Colour Sensor is set(LOW)!\r\n");
+	else
+	{
+		_Error_Handler(__FILE__, __LINE__);
+	}
+
+	address= INT_RED_HI;
+	bufferColourSensor[0] = (RedGain>>8)& 0x000F;
+
+	if(HAL_I2C_Mem_Write(&hi2c1, COLOUR_SENSOR<<1, address, 1, bufferColourSensor, 1, 100)==HAL_OK)
+				API_USR_TransmitMessage("Red Gain of the Colour Sensor is set(HIGH)!\r\n");
+	else
+	{
+		_Error_Handler(__FILE__, __LINE__);
+	}
+		
+	//Set default Green Channel Gain
+	address= INT_GREEN_LO;                                                            //Select value range (Sensor gain)
+	bufferColourSensor[0] = GreenGain & 0x00FF;
+
+	if(HAL_I2C_Mem_Write(&hi2c1, COLOUR_SENSOR<<1, address, 1, bufferColourSensor, 1, 100)==HAL_OK)
+				API_USR_TransmitMessage("Green Gain of the Colour Sensor is set(LOW)!\r\n");
+	else
+	{
+		_Error_Handler(__FILE__, __LINE__);
+	}
+
+	address= INT_GREEN_HI;
+	bufferColourSensor[0] = (GreenGain>>8)& 0x000F;
+
+	if(HAL_I2C_Mem_Write(&hi2c1, COLOUR_SENSOR<<1, address, 1, bufferColourSensor, 1, 100)==HAL_OK)
+				API_USR_TransmitMessage("Green Gain of the Colour Sensor is set(HIGH)!\r\n");
+	else
+	{
+		_Error_Handler(__FILE__, __LINE__);
+	}
+	
+	//Set default Blue Channel Gain
+	address= INT_BLUE_LO;                                                            //Select value range (Sensor gain)
+	bufferColourSensor[0] = BlueGain & 0x00FF;
+
+	if(HAL_I2C_Mem_Write(&hi2c1, COLOUR_SENSOR<<1, address, 1, bufferColourSensor, 1, 100)==HAL_OK)
+				API_USR_TransmitMessage("Blue Gain of the Colour Sensor is set(LOW)!\r\n");
+	else
+	{
+		_Error_Handler(__FILE__, __LINE__);
+	}
+
+	address= INT_BLUE_HI;
+	bufferColourSensor[0] = (BlueGain>>8)& 0x000F;
+
+	if(HAL_I2C_Mem_Write(&hi2c1, COLOUR_SENSOR<<1, address, 1, bufferColourSensor, 1, 100)==HAL_OK)
+				API_USR_TransmitMessage("Blue Gain of the Colour Sensor is set(HIGH)!\r\n");
+	else
+	{
+		_Error_Handler(__FILE__, __LINE__);
+	}
+	
+	//Set default Clear Channel Gain
+	address= INT_CLEAR_LO;                                                            //Select value range (Sensor gain)
 	bufferColourSensor[0]= ClearGain & 0x00FF;
 
 	if(HAL_I2C_Mem_Write(&hi2c1, COLOUR_SENSOR<<1, address, 1, bufferColourSensor, 1, 100)==HAL_OK)
@@ -687,6 +824,7 @@ void SetClearGain(void)
 		_Error_Handler(__FILE__, __LINE__);
 	}
 
+	//Back to show menu
 	SelectColourSensorMenuOnUart();
 }
 
@@ -793,10 +931,10 @@ void SelectColourSensorMenuOnUart(void)
 	{
 		ReceiveUart();
 		menuSelection=receiveInputArray[enterPlacement];
-		snprintf((char *)buffer,sizeof(buffer),"enterPlacement: %2d\r\n",enterPlacement);
-		API_USR_TransmitMessage((char *)buffer);
-		snprintf((char *)buffer,sizeof(buffer),"menuSelection: %2d\r\n",menuSelection);
-		API_USR_TransmitMessage((char *)buffer);
+//		snprintf((char *)buffer,sizeof(buffer),"enterPlacement: %2d\r\n",enterPlacement);
+//		API_USR_TransmitMessage((char *)buffer);
+//		snprintf((char *)buffer,sizeof(buffer),"menuSelection: %2d\r\n",menuSelection);
+//		API_USR_TransmitMessage((char *)buffer);
 		
 		menuSelection = menuSelection - 48; // to get integer value from ASCII
 		//menuSelection = ReceiveUartCalculationValue();

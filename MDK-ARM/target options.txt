@@ -1,0 +1,14 @@
+C Include Paths:
+
+../Inc;../Drivers/STM32F3xx_HAL_Driver/Inc;../Drivers/STM32F3xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F3xx/Include;../Drivers/CMSIS/Include;../Drivers/BSP/STM32F3xx-Nucleo
+
+
+Compiler Control String:
+
+--c99 -c --cpu Cortex-M4.fp -D__EVAL -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32F3xx_HAL_Driver/Inc -I ../Drivers/STM32F3xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F3xx/Include -I ../Drivers/CMSIS/Include
+../Drivers/BSP/STM32F3xx-Nucleo
+-I./RTE/_UDRS_EJP_Master_V1_00_
+-IC:/Keil_v5/ARM/PACK/ARM/CMSIS/5.4.0/CMSIS/Core/Include
+-IC:/Keil_v5/ARM/PACK/Keil/STM32F3xx_DFP/2.1.0/Drivers/CMSIS/Device/ST/STM32F3xx/Include
+-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F303xE -DUSE_HAL_DRIVER -DSTM32F303xE
+-o .\UDRS_EJP_Master(V1_00)\*.o --omf_browse .\UDRS_EJP_Master(V1_00)\*.crf --depend .\UDRS_EJP_Master(V1_00)\*.d 

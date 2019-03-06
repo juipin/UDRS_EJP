@@ -52,14 +52,14 @@ extern I2C_HandleTypeDef hi2c1;
 #define COLOUR_SENSOR 0x74
 
 #define CAPACITOR	7	//0x0F
-#define GAIN_RED	1180	//525	//1250
-#define GAIN_GREEN	1195	//625	//1250
-#define GAIN_BLUE	865	//740	//1250
-#define GAIN_CLEAR	610	//215
+#define GAIN_RED	650 //1180	//525	//1250
+#define GAIN_GREEN	650 //1195	//625	//1250
+#define GAIN_BLUE	650	//1100	//740	//1250
+#define GAIN_CLEAR	270 //610	//215
 
 #define CALIBRATE_RED	920
 #define CALIBRATE_GREEN	920
-#define CALIBRATE_BLUE	400
+#define CALIBRATE_BLUE	450
 #define CALIBRATE_CLEAR	980
 #define CALIBRATION_ITERATIONS	20
 
@@ -93,6 +93,7 @@ void SetRedGain(void);
 void SetGreenGain(void);
 void SetBlueGain(void);
 void SetClearGain(void);
+void SetDefaultGain(void);
 void AutoCalibrateSensorGains(void);
 
 #endif /* APPCOLOURDETECT_H_ */

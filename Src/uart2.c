@@ -45,8 +45,8 @@
   */
 	
 #include "main.h"
-#include "stm32f3xx_hal.h"
 #include "uart2.h"
+//#include "stm32f3xx_hal.h"
 
 /* Struct containing Device Selection in the menu */
 UDRS_OperationTypedef	APP_JP_operation[] = 
@@ -656,10 +656,10 @@ void SelectTopMenuOnUart(void)
 	{
 		ReceiveUart();
 		menuSelection=receiveInputArray[enterPlacement];
-		snprintf((char *)buffer,sizeof(buffer),"enterPlacement: %2d\r\n",enterPlacement);
-		API_USR_TransmitMessage((char *)buffer);
-		snprintf((char *)buffer,sizeof(buffer),"menuSelection: %2d\r\n",menuSelection);
-		API_USR_TransmitMessage((char *)buffer);
+//		snprintf((char *)buffer,sizeof(buffer),"enterPlacement: %2d\r\n",enterPlacement);
+//		API_USR_TransmitMessage((char *)buffer);
+//		snprintf((char *)buffer,sizeof(buffer),"menuSelection: %2d\r\n",menuSelection);
+//		API_USR_TransmitMessage((char *)buffer);
 		
 		menuSelection = menuSelection - 48; // to get integer value from ASCII
 		//menuSelection = ReceiveUartCalculationValue();

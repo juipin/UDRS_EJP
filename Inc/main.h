@@ -53,6 +53,9 @@
 /* USER CODE BEGIN Includes */
 #include "stdint.h"												// uinit definition
 #include "string.h"
+#include "stm32f3xx_nucleo.h"
+//#include "uart2.h"
+//#include "AppColourDetect.h"
 
 
 /* USER CODE END Includes */
@@ -187,6 +190,8 @@ extern	uint8_t	g_JP_timeout1S, 	g_JP_timeout500mS;
 extern uint8_t halfSecondFlag, secondFlag, fiveSecondFlag, errorFlag, enterFlag, exitFlag, i, j, counter, autoLogin;
 extern uint8_t menuSelection, receiveOneInput, receiveTwoInputsFirst,receiveTwoInputsSecond, receiveInputArray[NUM_OF_UART_RECEIVED+1], enterPlacement;
 extern uint8_t buffer[100], receiveArray[NUM_OF_UART_RECEIVED+1];
+
+extern void MX_I2C1_Init(void);
 
 /* Exported macro ------------------------------------------------------------*/
 /* Define macro to allow inclusion / removal of operations (menu) 					  */

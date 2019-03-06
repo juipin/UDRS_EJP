@@ -28,6 +28,7 @@
 ".\udrs_ejp_master(v1_00)\stm32f3xx_hal_flash.o"
 ".\udrs_ejp_master(v1_00)\stm32f3xx_hal_flash_ex.o"
 ".\udrs_ejp_master(v1_00)\system_stm32f3xx.o"
+".\udrs_ejp_master(v1_00)\stm32f3xx_nucleo.o"
 --library_type=microlib --strict --scatter ".\UDRS_EJP_Master(V1_00)\Master(V1_00).sct"
 --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers

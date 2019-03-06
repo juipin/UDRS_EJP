@@ -48,8 +48,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f3xx_hal.h"
-//#include "uart2.h"
-//#include "AppColourDetect.h"
 
 /* USER CODE BEGIN Includes */
 
@@ -158,7 +156,10 @@ extern void API_USR_TransmitMessage(char *message);
 //////extern void SetExit(void);
 extern void SelectTopMenuOnUart(void);
 void APP_ColourDetect(void);
-uint8_t BSP_PB_GetState(void);
+
+extern void MX_I2C1_Init(void);
+
+//uint8_t BSP_PB_GetState(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -244,6 +245,7 @@ void APP_ColourDetect(void)
 }
 
 
+/*
 uint8_t BSP_PB_GetState(void)
 {
 	if(HAL_GPIO_ReadPin(B1_GPIO_Port,B1_Pin) == GPIO_PIN_SET)
@@ -251,6 +253,7 @@ uint8_t BSP_PB_GetState(void)
 	else
 		return 0;
 }
+*/
 
 /* USER CODE END 0 */
 
@@ -320,6 +323,8 @@ UDRS_OperationTypedef	UDRS_operation[] =
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 
+	/* Main Menu */
+	BSP_LED_Init(LED_GREEN);
 	SelectTopMenuOnUart();
   API_USR_TransmitMessage("\r\n\nTo start, Please press & hold for 3 seconds to start\r\n\n");
   HAL_Delay(500);
@@ -337,9 +342,9 @@ UDRS_OperationTypedef	UDRS_operation[] =
 		// to include display on the particular menu
 
 		// Main program menu
-		if(BSP_PB_GetState() == GPIO_PIN_SET)
+		if(BSP_PB_GetState(BUTTON_USER) == GPIO_PIN_SET)
 		{
-			while(BSP_PB_GetState() == GPIO_PIN_SET);
+			while(BSP_PB_GetState(BUTTON_USER) == GPIO_PIN_SET);
 			UDRS_operation[g_MenuIndex].OpFunc();
 			g_MenuIndex++;
 			if(g_MenuIndex >= COUNT_OF_OPERATION(UDRS_operation))
@@ -990,6 +995,8 @@ void _Error_Handler(char *file, int line)
 	// Skip for testing
   //while(1)
   {
+		snprintf((char *)buffer,sizeof(buffer),"\r\nError in file: %s, line number: %5d\r\n",file, line);
+		API_USR_TransmitMessage((char *)buffer);
   }
   /* USER CODE END Error_Handler_Debug */
 }
